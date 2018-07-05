@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>RESMA 1.1</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type="text/css">
+        body,
+        html {
+            /* width: 100%; */
+            height: 100%;
+            margin: 0;
+            font-family: Arial;
+        }
+
+        #container,
+        #map {
+            height: 100%;
+            /* position: relative; */
+        }
+
+        .anchorBL {
+            display: none;
+        }
+
+        #modifier {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            transform: translate(20px, -20px);
+            width: 10em;
+        }
+
+        #infobox {
+            position: absolute;
+            width: 16em;
+            left: 0;
+            top: 0;
+            transform: translate(10px, 40px);
+        }
+
+        td {
+            border: none !important;
+        }
+
+        #form {
+            width: 50em;
+            min-width: 30em;
+            margin: auto;
+        }
+
+        /* #legend {
+            position: absolute;
+            width: 100px;
+            right: 0;
+            top: 0;
+            transform: translateY(70px);
+            display: block;
+        }
+
+        #legend button {
+            border: 0px solid gray;
+            color: white;
+            padding: 0px 10px;
+            font-weight: bold;
+            width: 90px;
+        }
+
+        #legend button:not(:last-child) {
+            border-bottom: none;
+        } */
+
+        #newLegend1 {
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            transform: translate(210px, -12px);
+        }
+
+        #newLegend2 {
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            transform: translate(210px, -12px);
+        }
+
+        #selectCity,#selectType, #maxValue, #size{
+            width:150px;
+            display: inline-block;
+        }
+
+        #lineCont {
+            width: 80%;
+            margin: auto;
+            bottom: 8vh;
+            left: 10vw;
+            position: absolute;
+        }
+
+        #line {
+            height: 6px;
+            width: 30%;
+            background: dimgray;
+            border-radius: 5px;
+            margin: auto;
+            position: relative;
+        }
+
+        .circle {
+            width: 20px;
+            height: 20px;
+            background: dimgray;
+            border-radius: 15px;
+            position: absolute;
+            top: -7px;
+            border: 3px solid white;
+            cursor: pointer;
+            box-sizing: border-box;
+        }
+
+        .circle:before {
+            content: '';
+            width: 10px;
+            height: 10px;
+            background: white;
+            position: absolute;
+            border-radius: 100%;
+            top: 2px;
+            left: 2px;
+            display: none;
+        }
+
+        .circle .popupSpan {
+            width: auto;
+            height: auto;
+            padding: 8px;
+            white-space: nowrap;
+            display: inline-block;
+            color: black;
+            font-weight: bold;
+            position: absolute;
+            top: 8px;
+            left: -50px;
+            display: none;
+            transition: all 0.1s ease-out;
+        }
+
+        .circle.hover:before,
+        .circle.active:before,
+        .circle.hover .popupSpan,
+        .circle.active .popupSpan {
+            display: block;
+        }
+
+        .circle.active .popupSpan {
+            top: -40px;
+        }
+
+        #city {
+            position: absolute;
+            margin: auto;
+            top: 1vh;
+            left:48vw;
+            text-align: center;
+            display: block;
+            clear: both;
+        }
+
+        .footer {
+            clear: both;
+            position: relative;
+            bottom: 0;
+            width: 100%;
+            height: 60px;
+            line-height: 60px;
+            /* background-color: #f5f5f5; */
+            text-align: center;
+        }
+
+        #coord {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            transform: translate(-250px, -10px);
+        }
+
+        #zl {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            transform: translate(-200px, -10px);
+        }
+
+        #toggler {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            transform: translate(-5px, -5px);
+        }
+    </style>
+    <script src="https://unpkg.com/popper.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <script src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-3.3.1.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+    <script src="papaparse.js"></script>
+    <script src="rainbowvis.js"></script>
+    <script src="http://api.map.baidu.com/api?v=2.0&ak=7x7kT5Qo9qBK5ucW6eqGF16qsToonADj"></script>
+    <script src="http://api.map.baidu.com/library/Heatmap/2.0/src/Heatmap_min.js"></script>
+    <script src="http://api.map.baidu.com/library/DistanceTool/1.2/src/DistanceTool_min.js"></script>
+</head>
+
+<body>
+    <div id="container">
+        <div id="map">
+            <div class="jumbotron">
+                <h1 style="text-align:center;font-weight:bold;">Real Estate Synergy Monitor Application</h1><br>
+                <form id="form" class="card bg-light" class="card-body">
+                    <br style="font-size:30px">
+                    <!-- <div class="custom-file">
+                        <label class="custom-file-label" for="file" id="path">Choose a .csv file</label>
+                        <input type="file" class="custom-file-input" id="file" onchange="$('#path').html(this.value)">
+                    </div><br><br> -->
+                    <table class="table text-center" style="width:36em; margin: auto;">
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <label for="selectCity">
+                                        <h5>City</h5>
+                                    </label><br>
+                                    <select class="form-control" id='selectCity' required>
+                                        <option selected disabled hidden>Select a city</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <label for="selectType">
+                                        <h5>Housing type</h5>
+                                    </label><br>
+                                    <select class="form-control" id="selectType" required>
+                                        <option selected disabled hidden>Select a type</option>
+                                        <option value='xf'>新房</option>
+                                        <option value='esf'>二手房</option>
+                                        <option value='zf' disabled>租房</option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div>
+                                        <label for="maxValue">
+                                            <h5>Max value</h5>
+                                        </label><br>
+                                        <input type="text" class="form-control" id="maxValue" placeholder="Max value required" value="50000" required>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div>
+                                        <label for="size">
+                                            <h5>Dot size</h5>
+                                        </label><br>
+                                        <input type="text" class="form-control" id="size" placeholder="Size required" value="25" required>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table><br>
+                    <button type="submit" class="btn btn-secondary" style="width: 8em; margin:auto">Submit</button><br><br>
+                </form>
+            </div>
+            <div style="width: 30rem; margin: auto">
+                <div class="card-body">
+                    <h5 class="card-title">Latest update:</h5>
+                    <p class="card-text">
+                        - Redesigned analysis of specific area<br>
+                        - Multiple small function added<br><br>
+                        Please <a href="mailto:vito.guo@aujian.com?Subject=Request%2FQuestion%20about%20RESMA" target="_top">contact the developer</a> for any request or question.
+                    </p>
+                </div>
+            </div><br>
+            <div class="alert alert-success" style="width:18rem; float:right; margin-right:36px;">
+                Lastest data obtained: <b>2018-06-08</b>
+            </div>
+            <p style="height: 25px;"></p>
+            <footer class="footer">
+                <div class="container">
+                    <span class="text-muted">© 2018 <a href="https://www.aujian.com" target="_blank" style="color:inherit">Aujian</a></span>
+                </div>
+            </footer>
+        </div>
+        <div id="controler">
+            <div id="modifier">
+                <!-- <div class="btn-group dropup mb-1" style="display: block" id="dotsInBoundary">
+                    <button type="button" style="width:160px" class="btn btn-secondary" onclick="showMarkersInsideBoundary()">添加标注</button>
+                </div> -->
+                <div class="btn-group dropup mb-1" style="display: block">
+                    <button type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">&nbsp&nbsp&nbsp&nbspTools memu&nbsp&nbsp&nbsp&nbsp</button>
+                    <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+                        <a class="dropdown-item" href="#" onclick="toggleOverlayStyle()">热力图/散点图</a>
+                        <a class="dropdown-item" href="#" onclick="toggleMapStyle()">地图类型</a>
+                        <a class="dropdown-item" href="#" onclick="meaDis()">测距</a>
+                        <a class="dropdown-item" href="#" onclick="goto()">输入坐标</a>
+                    </div>
+                </div>
+                <div class='btn-group-vertical' style="display: in-line">
+                    <button type="button" onclick="sizeUp()" class="btn btn-secondary">&nbspsize <b>⇧</b>&nbsp</button>
+                    <button type="button" class="btn btn-secondary disabled" id='sizeText' style="opacity: 1;" disabled></button>
+                    <button type="button" onclick="sizeDown()" class="btn btn-secondary">&nbspsize <b>⇩</b>&nbsp</button>
+                </div>
+                <div class='btn-group-vertical' style="display: in-line">
+                    <button type="button" onclick="maxUp()" class="btn btn-secondary">&nbspmax <b>⇧</b>&nbsp</button>
+                    <button type="button" class="btn btn-secondary disabled" id='valueText' style="opacity: 1;" disabled></button>
+                    <button type="button" onclick="maxDown()" class="btn btn-secondary">&nbspmax <b>⇩</b>&nbsp</button>
+                </div>
+            </div>
+            <div id="infobox" style="opacity: 0.8;">
+                <div class="alert alert-secondary" role="alert">
+
+                    <h4 class="alert-heading" id="infoType">Summary</h4><hr>
+                    <p>
+                        小区总数：<span id="totalComm"></span><br>
+                        平均均价：<span id="evaPX"></span><br>
+                        最高均价：<span id="highPX"></span>
+                        <button type="button" style="float: right; font-size:14px; padding:0;" class="btn btn-secondary btn-sm" onclick="getHighPX()">&nbsp显示&nbsp</button><br>
+                        最低均价：<span id="lowPX"></span>
+                        <button type="button" style="float: right; font-size:14px; padding:0;" class="btn btn-secondary btn-sm" onclick="getLowPX()">&nbsp显示&nbsp</button>
+                    </p><hr>
+                    <p>
+                        <h5>
+                            <b>指定区域</b>
+                            <button type="button" style="float: right; font-size:14px; padding:0"  class="btn btn-secondary btn-sm" onclick="SquareSummary()">&nbsp更新&nbsp</button>
+                            <button type="button" style="float: right; font-size:14px; padding:0"  class="btn btn-secondary btn-sm" onclick="setSquare()">&nbsp设置&nbsp</button>
+                        </h5>
+                        小区总数：<span id="totalComm2"></span><br>
+                        平均均价：<span id="evaPX2"></span><br>
+                        最高均价：<span id="highPX2"></span>
+                        <button type="button" style="float: right; font-size:14px; padding:0;"  class="btn btn-secondary btn-sm" onclick="getHighPX2()">&nbsp显示&nbsp</button><br>
+                        最低均价：<span id="lowPX2"></span>
+                        <button type="button" style="float: right; font-size:14px; padding:0;"  class="btn btn-secondary btn-sm" onclick="getLowPX2()">&nbsp显示&nbsp</button>
+                    </p>
+                    <!-- <button type="button" onclick="showMarkers()" class="btn btn-secondary btn-sm center-block" style="position:relative;left:45px" title="Mark all communities within current screen.">Show markers</button> -->
+                    <div id="markerAndData">
+                        <button type="button" style="font-size:14px; padding:0;" class="btn btn-secondary btn-sm" onclick="showMarkersInsideBoundary()">&nbsp添加标注&nbsp</button>
+                        <button type="button" style="font-size:14px; padding:0;" class="btn btn-secondary btn-sm" onclick="download(commFile)">&nbsp导出数据&nbsp</button>
+                        <button type="button" style="font-size:14px; padding:0;" class="btn btn-secondary btn-sm" onclick="clearSquare()">&nbsp清除区域&nbsp</button>
+                    </div>
+                    <hr>
+                    <div class="input-group input-group-sm">
+                        <input type="text" class="form-control" placeholder="小区" id="Search">
+                        <div class="input-group-append">
+                            <button class="btn btn-outline-secondary" type="button" onclick="BDSearch()" title="请输入两个汉字以上">百度</button>
+                            <button class="btn btn-outline-secondary" type="button" onclick="DBSearch()" title="在数据库中搜索">DB</button>
+                            <button class="btn btn-outline-secondary" type="button" onclick="SearchClear()" title="清楚标记">清除</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- <div class="btn-group" id="legend">
+                <button style="background-color: rgb(255,0,0)" disabled>100%~</button>
+                <button style="background-color: rgb(255,160,0)" disabled>90~100%</button>
+                <button style="background-color: rgb(255,225,0)" disabled>80~90%</button>
+                <button style="background-color: rgb(160,255,0)" disabled>70~80%</button>
+                <button style="background-color: rgb(0,255,0)" disabled>60~70%</button>
+                <button style="background-color: rgb(0,255,160)" disabled>50~60%</button>
+                <button style="background-color: rgb(0,255,255)" disabled>40~50%</button>
+                <button style="background-color: rgb(0,160,255)" disabled>30~40%</button>
+                <button style="background-color: rgb(0,0,255)" disabled>20~30%</button>
+                <button style="background-color: rgb(125,0,255)" disabled>10~20%</button>
+                <button style="background-color: rgb(190,0,255)" disabled>0~10%</button>
+            </div> -->
+            <div id="newLegend1">
+                <img src="legend.png" alt="Legend">
+            </div>
+            <div id="newLegend2">
+                <img src="legend2.png" alt="Legend">
+            </div>
+            <div id="lineCont">
+                <div id="line"></div>
+                <div id="span"></div>
+            </div>
+            <div id="city">
+                <p><h1 id="cityName" style="font-family:STXingkai"></h1></p>
+                <p><h5 id="housingTypeName" style="font-family:Microsoft JhengHei"></h5></p>
+            </div>
+            <div id='coord'>
+                <input type="text" class="form-control" id="lnglat">
+            </div>
+            <div>
+                <button type="button" class="btn btn-light disabled" id='zl' disabled></button>
+            </div>
+        </div>
+        <div id='toggler'>
+            <button type="button" class="btn btn-outline-secondary" onclick="toggleUI()">Toggle<br>UI</button>
+        </div>
+    </div>
+    <script type="text/javascript">
+        $("#controler").hide();
+        $("#toggler").hide();
+        // var fn;
+        var maxValue;
+        var radius;
+        var heatmapOverlay;
+        var tempMax;
+        var map;
+        var maxIndex;
+        var minIndex;
+        var maxIndexInSight;
+        var minIndexInSight;
+        var jsonData;
+        var path;
+        var cityData;
+        var city;
+        var cityIndex;
+        var cityName;
+        var housingType;
+        var housingTypeName;
+        var fileList;
+        var fileName;
+        var virgin = true;
+        var goodLevel;
+        var local;
+        var dates = [];
+        var mapStyleOn = true;
+        var square;
+        var pLng;
+        var pLat;
+        var myDis;
+        var circleBoundary;
+        var infoType;
+        var dotsInSquareLi;
+        var commFile;
+        var DBSearchLi;
+        var rainbow = new Rainbow();
+        var isHeatMap;
+        var squareDotsPriceList;
+        var squareDotsIndexList;
+        var squareSum;
+        var squareCount;
+
+        $.get("cityIDtask.csv", function (allText) {
+            var results = Papa.parse(allText, {
+                header: true,
+                dynamicTyping: true,
+            });
+            var cityObjects = {};
+            cityData = results.data;
+            for (var i = 0; i < cityData.length; i++) {
+                cityObjects[cityData[i]['city']] = cityData[i]['name'];
+            }
+            var select = document.getElementById("selectCity");
+            for (index in cityObjects) {
+                select.options[select.options.length] = new Option(cityObjects[index], index);
+            }
+        });
+
+        $("form").submit(function (event) {
+            // fn = $("#file").val().replace(/^.*\\/, "");
+            city = $("#selectCity").val();
+            cityName = $("#selectCity option:selected").text();
+            housingType = $("#selectType").val();
+            housingTypeName = $("#selectType option:selected").text();
+            maxValue = parseInt($("#maxValue").val());
+            radius = parseInt($("#size").val());
+            tempMax = maxValue;
+            path = 'Database/' + city + '/' + housingType + '/';
+            if (housingType=='esf'){
+                goodLevel = 10; //16
+            } else if (housingType=='xf') {
+                goodLevel = 13;
+            }
+            getFiles();
+            return false;
+        });
+        
+        function getFiles() {
+            $.get(path, function (data) {
+                fileList = Array.from(new Set(data.match(/[a-zA-Z0-9_-]+\.csv/g)));
+                fileName = fileList.slice(-1)[0];
+                for (var i = 0; i < fileList.length; i++) {
+                    var date = fileList[i].match(/(\d{4})(\d{2})(\d{2})/);
+                    dates.push(date[1] + '-' + date[2] + '-' + date[3]);
+                }
+                prepareMap();
+            });
+        }
+
+        function prepareMap() {
+            for (var i=0;i<cityData.length;i++) {
+                if (cityData[i]['city']==city) {
+                    cityIndex = i;
+                }
+            }
+            map = new BMap.Map("map");
+            local = new BMap.LocalSearch(map, {renderOptions: { map: map }});
+            var center = new BMap.Point(cityData[cityIndex]['lng'], cityData[cityIndex]['lat']);
+            map.centerAndZoom(center, 12);
+            map.enableScrollWheelZoom();
+            myDis = new BMapLib.DistanceTool(map);
+            map.setMapStyle({ style: 'grayscale' });
+            map.addControl(new BMap.ScaleControl({ anchor: BMAP_ANCHOR_BOTTOM_RIGHT }));
+            map.addControl(new BMap.MapTypeControl({mapTypes: [BMAP_NORMAL_MAP,BMAP_HYBRID_MAP], anchor: BMAP_ANCHOR_TOP_LEFT}));
+            var cr = new BMap.CopyrightControl({ anchor: BMAP_ANCHOR_TOP_RIGHT });
+            cr.addCopyright({ id: 1, content: "<img src='http://www.aujian.com/uploads/9/7/3/2/97329096/published/1_1.png'>" });
+            map.addControl(cr);
+            $("#controler").show();
+            $("#toggler").show();
+            $("#dotsInBoundary").hide();
+            $("#markerAndData").hide();
+            document.getElementById("cityName").innerHTML = cityName;
+            document.getElementById("housingTypeName").innerHTML = housingTypeName;
+            document.getElementById("lnglat").value = cityData[cityIndex]['lng'] + "," + cityData[cityIndex]['lat']; 
+            pLng = cityData[cityIndex]['lng'];
+            pLat = cityData[cityIndex]['lat'];
+            document.getElementById("zl").innerHTML = map.getZoom();
+            map.addEventListener("click",function(e){
+                pLng = e.point.lng;
+                pLat = e.point.lat;
+                document.getElementById("lnglat").value = pLng + "," + pLat;
+            });
+            map.addEventListener("zoomend", function(){
+                document.getElementById("zl").innerHTML = map.getZoom();
+            });
+            showHeatMap();
+            makeCircles();
+        }
+
+        function showHeatMap() {
+            $("#newLegend1").show();
+            $("#newLegend2").hide();
+            map.clearOverlays();
+            document.getElementById("valueText").innerHTML = maxValue;
+            document.getElementById("sizeText").innerHTML = radius;
+            var fullPath = path + fileName;
+            $.get(fullPath, function (allText) {
+                var results = Papa.parse(allText, {
+                    header: true,
+                    dynamicTyping: true,
+                });
+                jsonData = results.data;
+                if (virgin == true) {
+                    showSummary();
+                    virgin = false;
+                }
+                heatmapOverlay = new BMapLib.HeatmapOverlay({
+                    "radius": radius, "opacity": 0, "gradient": {
+                        .0: 'rgb(190,0,255)',
+                        .1: 'rgb(125,0,255)',
+                        .2: 'rgb(0,0,255)',
+                        .3: 'rgb(0,160,255)',
+                        .4: 'rgb(0,255,255)',
+                        .5: 'rgb(0,255,160)',
+                        .6: 'rgb(0,255,0)',
+                        .7: 'rgb(160,255,0)',
+                        .8: 'rgb(255,225,0)',
+                        .9: 'rgb(255,160,0)',
+                        1: 'rgb(255,0,0)'
+                    }
+                });
+                map.addOverlay(heatmapOverlay);
+                heatmapOverlay.setDataSet({ data: jsonData, max: maxValue });
+                isHeatMap = true;
+                map.panTo(cityName);
+            });
+        }
+
+        function getMessage(index) {
+            if (housingType=='esf') {
+                var id = jsonData[index]['ID'];
+                var info = "均价: " + jsonData[index]['count'].toLocaleString() + "<br>待售房屋数量: " + jsonData[index]['房屋数量'] + "<br>地址: " + jsonData[index]['地址'] + "<br><a href='https://anjuke.com/community/view/" + id + "' target='_blank'><em>Click for detailed information</em></a>";
+            }
+            else if (housingType=='xf') {
+                var id = jsonData[index]['ID'];
+                var info = "均价: " + jsonData[index]['count'].toLocaleString() + "<br>上线时间: " + jsonData[index]['上线时间'] + "<br>户型数量: " + jsonData[index]['户型数量'] + "<br>地址: " + jsonData[index]['区'] + "," + jsonData[index]['地段'] + "," + jsonData[index]['地址'] + "<br><a href='https://fang.anjuke.com/loupan/" + id + ".html' target='_blank'><em>Click for detailed information</em></a>";
+            }
+            return info;
+        }
+
+        function getOpts(index) {
+            var opts = {
+                width: 200,
+                height: 240,
+                title: "<b>" + jsonData[index]['小区'] + "</b><hr>",
+            }
+            return opts;
+        }
+
+        function showSummary() {
+            let len = jsonData.length - 1;
+            document.getElementById("totalComm").innerHTML = len.toLocaleString();
+            let sum = 0;
+            let li = [];
+            for (var i = 0; i < len; i++) {
+                sum += parseInt(jsonData[i]['count']);
+                li.push(jsonData[i]['count']);
+            }
+            document.getElementById("evaPX").innerHTML = parseInt(sum / len).toLocaleString();
+            maxIndex = li.indexOf(Math.max(...li));
+            minIndex = li.indexOf(Math.min(...li));
+            document.getElementById("highPX").innerHTML = jsonData[maxIndex]['count'].toLocaleString();
+            document.getElementById("lowPX").innerHTML = jsonData[minIndex]['count'].toLocaleString();
+        }
+
+        // function updateSummary() {
+        //     let len = jsonData.length - 1;
+        //     let bound = map.getBounds();
+        //     let sum = 0;
+        //     let count = 0;
+        //     let li = [];
+        //     let li2 = [];
+        //     for (var i = 0; i < len; i++) {
+        //         let point = new BMap.Point(jsonData[i]['lng'], jsonData[i]['lat']);
+        //         if (bound.containsPoint(point)) {
+        //             sum += parseInt(jsonData[i]['count']);
+        //             count += 1;
+        //             li.push(jsonData[i]['count']);
+        //             li2.push(i);
+        //         }
+        //     }
+        //     document.getElementById("totalComm2").innerHTML = count.toLocaleString();
+        //     document.getElementById("evaPX2").innerHTML = parseInt(sum / count).toLocaleString();
+        //     maxIndexInSight = li2[li.indexOf(Math.max(...li))];
+        //     minIndexInSight = li2[li.indexOf(Math.min(...li))];
+        //     document.getElementById("highPX2").innerHTML = jsonData[maxIndexInSight]['count'].toLocaleString();
+        //     document.getElementById("lowPX2").innerHTML = jsonData[minIndexInSight]['count'].toLocaleString();
+        // }
+
+        function SquareSummary() {
+            if (typeof squareSum == "undefined") {
+                alert("请先添加标注");
+            }
+            document.getElementById("totalComm2").innerHTML = squareCount.toLocaleString();
+            document.getElementById("evaPX2").innerHTML = parseInt(squareSum / squareCount).toLocaleString();
+            maxIndexInSight = squareDotsIndexList[squareDotsPriceList.indexOf(Math.max(...squareDotsPriceList))];
+            minIndexInSight = squareDotsIndexList[squareDotsPriceList.indexOf(Math.min(...squareDotsPriceList))];
+            document.getElementById("highPX2").innerHTML = jsonData[maxIndexInSight]['count'].toLocaleString();
+            document.getElementById("lowPX2").innerHTML = jsonData[minIndexInSight]['count'].toLocaleString();
+        }
+
+        function addClickHandler(marker, infoWindow, point) {
+            marker.addEventListener("click", function () {
+                map.openInfoWindow(infoWindow, point);
+            });
+        }
+
+        function showMarkers() {
+            var zoomLevel = map.getZoom();
+            var removeMarker = function(e,ee,marker){
+                map.removeOverlay(marker);
+            }
+            if (zoomLevel >= goodLevel) {
+                let bound = map.getBounds();
+                let li = [];
+                for (var i = 0; i < jsonData.length - 1; i++) {
+                    let point = new BMap.Point(jsonData[i]['lng'], jsonData[i]['lat']);
+                    let marker = new BMap.Marker(point);
+                    if (bound.containsPoint(point)) {
+                        map.addOverlay(marker);
+                        li.push(marker);
+                        var infoWindow = new BMap.InfoWindow(getMessage(i), getOpts(i));
+                        addClickHandler(marker, infoWindow, point);
+                    }
+                }
+                map.addEventListener("zoomstart", function () {
+                    for (var i in li) {
+                        map.removeOverlay(li[i]);
+                    }
+                });
+            }
+            else {
+                alert("Please zoom in a bit more to show markers.")
+            }
+        }
+
+        function maxUp() {
+            maxValue = parseInt(maxValue + tempMax / 10);
+            showOverlay();
+            document.getElementById("valueText").innerHTML = maxValue;
+        }
+        function maxDown() {
+            maxValue = parseInt(maxValue - tempMax / 10);
+            showOverlay();
+            document.getElementById("valueText").innerHTML = maxValue;
+        }
+        function sizeUp() {
+            radius += 3;
+            showOverlay();
+            document.getElementById("sizeText").innerHTML = radius;
+        }
+        function sizeDown() {
+            radius -= 3;
+            showOverlay();
+            document.getElementById("sizeText").innerHTML = radius;
+        }
+
+        function showSingleMarker(point, index) {
+            map.panTo(point);
+            let marker = new BMap.Marker(point);
+            map.addOverlay(marker);
+            var infoWindow = new BMap.InfoWindow(getMessage(index), getOpts(index));
+            addClickHandler(marker, infoWindow, point);
+            map.addEventListener("zoomstart", function () {
+                map.removeOverlay(marker);
+            });
+        }
+
+        function getHighPX(){
+            var p = new BMap.Point(jsonData[maxIndex]['lng'], jsonData[maxIndex]['lat']);
+            showSingleMarker(p,maxIndex);
+        }
+        function getLowPX(){
+            var p = new BMap.Point(jsonData[minIndex]['lng'], jsonData[minIndex]['lat']);
+            showSingleMarker(p,minIndex);
+        }
+
+        function getHighPX2(){
+            for (var i in dotsInSquareLi) {
+                map.removeOverlay(dotsInSquareLi[i]);
+            }
+            if (maxIndexInSight) {
+                var p = new BMap.Point(jsonData[maxIndexInSight]['lng'], jsonData[maxIndexInSight]['lat']);
+                showSingleMarker(p,maxIndexInSight);
+            } else {alert("Please update");}
+        }
+        function getLowPX2(){
+            for (var i in dotsInSquareLi) {
+                map.removeOverlay(dotsInSquareLi[i]);
+            }
+            if (minIndexInSight) {
+                var p = new BMap.Point(jsonData[minIndexInSight]['lng'], jsonData[minIndexInSight]['lat']);
+                showSingleMarker(p,minIndexInSight);
+            } else {alert("Please update");}
+        }
+
+        function makeCircles() {
+            if (dates.length < 2) {
+                $("#line").hide();
+                $("#span").show().text(dates[0]);
+            } else if (dates.length >= 2) {
+                $("#span").hide()
+                var firstDate = dates[0];
+                var lastDate = dates[dates.length - 1];
+                var dateRange = (new Date(lastDate) - new Date(firstDate)) / 86400000;
+                $("#line").append('<div class="circle" id="circle'+ firstDate +'" style="left: ' + 0 + '%;"><div class="popupSpan">' + firstDate) + '</div></div>';
+                for (var i = 1; i < dates.length - 1; i++) {
+                    var thisDateRange = (new Date(dates[i]) - new Date(firstDate)) / 86400000;
+                    var relativeRange = thisDateRange / dateRange;
+                    $("#line").append('<div class="circle" id="circle' + dates[i] + '" style="left: ' + relativeRange * 99 + '%;"><div class="popupSpan">' + dates[i]) + '</div></div>';
+                }
+                $("#line").append('<div class="circle" id="circle' + dates[i] + '" style="left: ' + 99 + '%;"><div class="popupSpan">' + lastDate + '</div></div>');
+            }
+            $(".circle:last").addClass("active");
+            activeCircles();
+        }
+
+        function activeCircles() {
+            $(".circle").mouseenter(function () {
+                $(this).addClass("hover");
+            });
+            $(".circle").mouseleave(function () {
+                $(this).removeClass("hover");
+            });
+            $(".circle").click(function () {
+                var spanNum = $(this).attr("id");
+                selectDate(spanNum);
+            });
+        }
+
+        function selectDate(selector) {
+            $selector = "#" + selector;
+            $(".active").removeClass("active");
+            $($selector).addClass("active");
+            var dateName = selector.replace('circle','').replace(/-/g,'');
+            fileName = fileName.replace(/\d{8}/,dateName);
+            virgin = true;
+            showOverlay();
+        };
+
+        function toggleMapStyle() {
+            if (mapStyleOn==true) {
+                map.setMapStyle({ style: '' });
+                mapStyleOn = false;
+            } else {
+                map.setMapStyle({ style: 'grayscale' });
+                mapStyleOn = true;
+            }
+        }
+
+        function setSquare() {
+            clearSquare();
+            var radius = prompt("Please enter the radius", "5000");
+            if (radius) {
+                var p = new BMap.Point(pLng, pLat);
+                var circle = new BMap.Circle(p, radius, { fillColor: null, strokeWeight: 0.0000000001, fillOpacity: 0.0000000001, strokeOpacity: 0.0000000001 });
+                map.addOverlay(circle);
+            } else {
+                alert("Please enter a valid number");
+            }
+            circleBoundary = circle.getBounds();
+            var circleSW = circleBoundary.getSouthWest();
+            var circleNE = circleBoundary.getNorthEast();
+            var pStart = circleSW;
+            var pEnd = circleNE;
+            map.removeOverlay(circle);
+            square = new BMap.Polygon([
+                new BMap.Point(pStart.lng,pStart.lat),
+                new BMap.Point(pEnd.lng,pStart.lat),
+                new BMap.Point(pEnd.lng,pEnd.lat),
+                new BMap.Point(pStart.lng,pEnd.lat)
+            ], {strokeColor:"blue", strokeWeight:1, fillOpacity: 0.4, strokeOpacity:0.3});
+            map.addOverlay(square);
+            $("#markerAndData").show();
+        }
+
+        function clearSquare() {
+            map.removeOverlay(square);
+            // circleBountry = null;
+            $("#markerAndData").hide();
+            for (var i in dotsInSquareLi) {
+                map.removeOverlay(dotsInSquareLi[i]);
+            }
+        }
+
+        function meaDis() {
+            myDis.open();
+        }
+
+        function toggleUI() {
+            $("#controler").toggle();
+        }
+
+        function goto() {
+            var setCenter = prompt("Please enter the coordinates", "121.608596,31.211557");
+            var lng = setCenter.match(/\d+.\d*/g)[0];
+            var lat = setCenter.match(/\d+.\d*/g)[1];
+            map.panTo(new BMap.Point(lng, lat));
+        }
+
+        function showMarkersInsideBoundary() {
+            dotsInSquareLi = [];
+            squareSum = 0;
+            squareCount = 0;
+            squareDotsPriceList = [];
+            squareDotsIndexList = [];
+            if (housingType=='esf') {
+                commFile = "小区,房屋数量,count,均价变动,lng,lat,地址,ID";
+                for (var i = 0; i < jsonData.length - 1; i++) {
+                    let point = new BMap.Point(jsonData[i]['lng'], jsonData[i]['lat']);
+                    let marker = new BMap.Marker(point);
+                    if (circleBoundary.containsPoint(point)) {
+                        commFile = commFile.concat("\n"+jsonData[i]['小区']+","+jsonData[i]['房屋数量']+","+jsonData[i]['count']+","+jsonData[i]['均价变动']+","+jsonData[i]['lng']+","+jsonData[i]['lat']+","+jsonData[i]['地址']+","+jsonData[i]['ID']);
+                        map.addOverlay(marker);
+                        dotsInSquareLi.push(marker);
+                        var infoWindow = new BMap.InfoWindow(getMessage(i), getOpts(i));
+                        addClickHandler(marker, infoWindow, point);
+                        squareSum += parseInt(jsonData[i]['count']);
+                        squareCount += 1;
+                        squareDotsPriceList.push(jsonData[i]['count']);
+                        squareDotsIndexList.push(i);
+                    }
+                }
+            }
+            else if (housingType=='xf') {
+                commFile = "小区,count,lng,lat,上线时间,建筑类型,价格类型,显示价格,户型数量,区,地段,地址,ID";
+                for (var i = 0; i < jsonData.length - 1; i++) {
+                    let point = new BMap.Point(jsonData[i]['lng'], jsonData[i]['lat']);
+                    let marker = new BMap.Marker(point);
+                    if (circleBoundary.containsPoint(point)) {
+                        commFile = commFile.concat("\n"+jsonData[i]['小区']+","+jsonData[i]['count']+","+jsonData[i]['lng']+","+jsonData[i]['lat']+","+jsonData[i]['上线时间']+","+jsonData[i]['建筑类型']+","+jsonData[i]['价格类型']+","+jsonData[i]['显示价格']+","+jsonData[i]['户型数量']+","+jsonData[i]['区']+","+jsonData[i]['地段']+","+jsonData[i]['地址']+","+jsonData[i]['ID']);
+                        map.addOverlay(marker);
+                        dotsInSquareLi.push(marker);
+                        var infoWindow = new BMap.InfoWindow(getMessage(i), getOpts(i));
+                        addClickHandler(marker, infoWindow, point);
+                        squareSum += parseInt(jsonData[i]['count']);
+                        squareCount += 1;
+                        squareDotsPriceList.push(jsonData[i]['count']);
+                        squareDotsIndexList.push(i);
+                    }
+                }
+            }
+        }
+
+        function BDSearch() {
+            local.clearResults();
+            for (var i in DBSearchLi) {
+                map.removeOverlay(DBSearchLi[i]);
+            }
+            var input = document.getElementById("Search").value;
+            local.search(input);
+        }
+
+        function DBSearch() {
+            local.clearResults();
+            for (var i in DBSearchLi) {
+                map.removeOverlay(DBSearchLi[i]);
+            }
+            var input = document.getElementById("Search").value;
+            DBSearchLi = [];
+            for (var i = 0; i < jsonData.length - 1; i++) {
+                if (jsonData[i]['小区'].includes(input)) {
+                    let point = new BMap.Point(jsonData[i]['lng'], jsonData[i]['lat']);
+                    let marker = new BMap.Marker(point);
+                    map.addOverlay(marker);
+                    DBSearchLi.push(marker);
+                    var infoWindow = new BMap.InfoWindow(getMessage(i), getOpts(i));
+                    addClickHandler(marker, infoWindow, point);
+                }
+            }
+            if (DBSearchLi.length==0) {alert("没有小区包含“" + input +"”字段。")}
+            else {alert("共找到" + DBSearchLi.length + "个小区包含“"+ input +"”字段。")}
+        }
+
+        function SearchClear() {
+            local.clearResults();
+            for (var i in DBSearchLi) {
+                map.removeOverlay(DBSearchLi[i]);
+            }
+        }
+
+        function showDotMap() {
+            $("#newLegend1").hide();
+            $("#newLegend2").show();
+            map.clearOverlays();
+            rainbow.setNumberRange(maxValue/10, maxValue);
+            // rainbow.setSpectrum('#ffeb6b', '#b25900');
+            rainbow.setSpectrum('lime', 'yellow', 'red');
+            for (var i = 0; i < jsonData.length - 1; i++) {
+                var point = new BMap.Point(jsonData[i]['lng'],jsonData[i]['lat']);
+                var hex = '#' + rainbow.colourAt(jsonData[i]['count']);
+                var circle = new BMap.Circle(point, radius*8, { fillColor: hex, strokeWeight: 0.00000000001, fillOpacity: 0.8, strokeOpacity: 0.00000000001 } );
+                map.addOverlay(circle);
+            }
+            isHeatMap = false;
+        }
+
+        function toggleOverlayStyle() {
+            if (isHeatMap == true) {showDotMap()}
+            else {showHeatMap()}
+        }
+
+        function showOverlay() {
+            if (isHeatMap == true) {showHeatMap()}
+            else {showDotMap()}
+        }
+
+        function download(text) {
+            var a = document.createElement('a');
+            var file = new Blob([text], {type: "text/plain"});
+            a.href = URL.createObjectURL(file);
+            a.download = "data.csv";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+    </script>
+</body>
+
+</html>
